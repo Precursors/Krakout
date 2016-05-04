@@ -7,7 +7,7 @@
   let defaultConfig = {
     viewmode: 'fullscreen'
   };
-  let width = 4096; // px
+  let width = 4096; // px 默认的游戏宽度 目前写死 宽高全靠缩放
   let height = 2160; // px
   class Krakout {
 
@@ -20,6 +20,8 @@
       function init() {
         // 创建基础的画布
         buildCanvas(['ball', 'board', 'layout'], buildScreen(container));
+
+        new PlainBoard(canvasList['board']);
       }
 
       // 生成画布
@@ -48,6 +50,7 @@
 
           // 获取canvas的context 并存入canvasList
           canvasList[tag] = canvas.getContext('2d');
+
         }
       }
 
@@ -65,6 +68,125 @@
       init();
     }
 
+  }
+
+  // 绘制图形的基类
+  class ModuleBase {
+    constructor (ctx, config = {}) {
+      let self = this;
+      // 会触发重绘的属性名
+      self.__willChange = [];
+      self.ctx = ctx;
+      self.config = config;
+      config.x = config.x || 0;
+      config.y = config.y || 0;
+      this.regChange(['x', 'y', 'width', 'height']);
+      this.initReady();
+      // 绘制图形
+      this.reDraw();
+      this.initComplete();
+    }
+    // 注册会触发重绘的属性名
+    regChange (key) {
+      if (!key) return;
+      if (typeof key === 'string') { // 属性名为一个字符串
+        this.__willChange.push(key);
+      } else if (key.length) { // 注册的属性名为一个数字 直接与willChange合并
+        this.__willChange = this.__willChange.concat(key);
+      } else { // 其余则认为传入的是一个object 循环调用regChange方法并传入key ！！！传的是key 就是想到可能图方便 直接将this.config塞进去
+        for (let attr in key) {
+          this.regChange(item);
+        }
+      }
+
+    }
+    // 更改config的属性
+    change (config) {
+      let flag = false;
+      for (let key in config) {
+        // 如果config中存在这个key 说明是可能影响到绘制的
+        if (key in this.config && this.__willChange.includes(key)) {
+          this.config[key] = config[key];
+          flag = true;
+        }
+      }
+      flag && this.reDraw();
+    }
+    // 清除上次绘制的区域
+    clear () {
+      var config = this.last;
+      if (!config) return;
+      this.ctx.clearRect(config.x, config.y, config.width, config.height);
+    }
+    // 记录上次的属性信息 里边至少但不限于 x y width height
+    record () {
+      var last = this.last = {};
+      for (let key in this.config) {
+        last[key] = this.config[key];
+      }
+    }
+    // 初次渲染前的事件 会在beforeDraw前执行
+    initReady () {}
+    // 在绘制之前 先清除上次绘制 并记录当前信息
+    beforeDraw () {
+      // 先清除上次绘制的区域
+      this.clear();
+      // 记录本次绘制区域
+      this.record();
+    }
+    // 绘制弹板 需要子类实现去
+    draw () {}
+    // 绘制后调用
+    afterDraw () {}
+    // 初次渲染后的事件
+    initComplete () {}
+    // 重新绘制
+    reDraw () {
+      // 绘制前
+      this.beforeDraw();
+      // 绘制
+      this.draw();
+      // 绘制后
+      this.afterDraw();
+    }
+  }
+
+  // 弹板的结构
+  class Board extends ModuleBase {
+    // 弹板默认宽400px 高 40px 在4k屏下 其余为自动缩放
+    constructor (ctx, config = {
+        width: 400,
+        height: 40
+    }) {
+        // config.x = (width - config.width) / 2;
+        // config.y = height - config.height;
+        super(ctx, config);
+    }
+  }
+
+  // 普通弹板
+  class PlainBoard extends Board {
+    // 子类实现的绘制方法
+    draw () {
+      var ctx = this.ctx;
+      // 创建一个方块
+      var config = this.config;
+      // 创建一个形状
+      var rectangle = new Path2D();
+      rectangle.rect(config.x, config.y, config.width, config.height);
+      ctx.fill(rectangle);
+
+    }
+    initComplete () {
+      let self = this;
+      // 简单的测试下change方法好不好使
+      setInterval(() => {
+        console.log(self.config.x);
+        self.change({
+          x: +self.config.x + 1
+        });
+      }, 10)
+    }
   }
 
   return Krakout;
