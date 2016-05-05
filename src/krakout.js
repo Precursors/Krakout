@@ -15,13 +15,23 @@
     constructor(container, config = defaultConfig) {
       let self = this;
       let canvasList = self._canvas = {}; // 存放画布的集合 球 板 背景 各种...
+      let screenWidth = self.screenWidth = parseFloat(getComputedStyle(container).width); // 容器的宽度
+      let ratioWidth = self.ratioWidth = (screenWidth / width); // 宽度缩放比例
+      let screenHeight = self.screenHeight = parseFloat(getComputedStyle(container).height); // 容器的高度
+      let ratioHeight = self.ratioHeight = (screenHeight / height); // 高度缩放比例
 
       // 初始化游戏
       function init() {
         // 创建基础的画布
         buildCanvas(['ball', 'board', 'layout'], buildScreen(container));
+        // 创建弹板
+        var board = new PlainBoard(canvasList['board']);
 
-        new PlainBoard(canvasList['board']);
+        container.addEventListener('mousemove', e => {
+          board.change({
+            x: e.screenX / self.ratioWidth
+          })
+        })
       }
 
       // 生成画布
@@ -80,11 +90,13 @@
       self.config = config;
       config.x = config.x || 0;
       config.y = config.y || 0;
-      this.regChange(['x', 'y', 'width', 'height']);
-      this.initReady();
+      // 注册需要重绘的属性集合
+      self.regChange(['x', 'y', 'width', 'height']);
+      // 初始化前做的操作
+      self.initReady();
       // 绘制图形
-      this.reDraw();
-      this.initComplete();
+      self.reDraw();
+      self.initComplete();
     }
     // 注册会触发重绘的属性名
     regChange (key) {
@@ -158,8 +170,8 @@
         width: 400,
         height: 40
     }) {
-        // config.x = (width - config.width) / 2;
-        // config.y = height - config.height;
+        config.x = (width - config.width) / 2;
+        config.y = height - config.height;
         super(ctx, config);
     }
   }
@@ -178,14 +190,14 @@
 
     }
     initComplete () {
-      let self = this;
-      // 简单的测试下change方法好不好使
-      setInterval(() => {
-        console.log(self.config.x);
-        self.change({
-          x: +self.config.x + 1
-        });
-      }, 10)
+      // let self = this;
+      // // 简单的测试下change方法好不好使
+      // setInterval(() => {
+      //   console.log(self.config.x);
+      //   self.change({
+      //     x: +self.config.x + 1
+      //   });
+      // }, 10)
     }
   }
 
