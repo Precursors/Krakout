@@ -15,8 +15,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   var defaultConfig = {
     viewmode: 'fullscreen'
   };
-  var width = 4096; // px 默认的游戏宽度 目前写死 宽高全靠缩放
-  var height = 2160; // px
+  var WIDTH = 4096; // px 默认的游戏宽度 目前写死 宽高全靠缩放
+  var HEIGHT = 2160; // px
 
   var Krakout =
 
@@ -29,9 +29,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     var self = this;
     var canvasList = self._canvas = {}; // 存放画布的集合 球 板 背景 各种...
     var screenWidth = self.screenWidth = parseFloat(getComputedStyle(container).width); // 容器的宽度
-    var ratioWidth = self.ratioWidth = screenWidth / width; // 宽度缩放比例
+    var ratioWidth = self.ratioWidth = screenWidth / WIDTH; // 宽度缩放比例
     var screenHeight = self.screenHeight = parseFloat(getComputedStyle(container).height); // 容器的高度
-    var ratioHeight = self.ratioHeight = screenHeight / height; // 高度缩放比例
+    var ratioHeight = self.ratioHeight = screenHeight / HEIGHT; // 高度缩放比例
 
     // 初始化游戏
     function init() {
@@ -45,6 +45,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           x: e.screenX / self.ratioWidth
         });
       });
+
+      // 创建小球
+      var ball = new PlainBall(canvasList['ball']);
     }
 
     // 生成画布
@@ -61,7 +64,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         canvas.style.position = 'absolute';
         canvas.style.top = 0;
         canvas.style.left = 0;
-
         // 设置唯一标识
         canvas.id = canvas.className = 'krakout-canvas-' + tag;
 
@@ -79,10 +81,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     // 设置画布的宽高
     function buildScreen(container) {
       return function (canvas) {
-        canvas.width = width;
-        canvas.height = height;
-        canvas.style.width = global.getComputedStyle(container).width;
-        canvas.style.height = global.getComputedStyle(container).height;
+        canvas.width = WIDTH;
+        canvas.height = HEIGHT;
+        canvas.style.width = WIDTH; //global.getComputedStyle(container).width;
+        canvas.style.height = HEIGHT; //global.getComputedStyle(container).height;
+        canvas.style.transform = 'scale3d(' + parseFloat(global.getComputedStyle(container).width) / WIDTH + ', ' + parseFloat(global.getComputedStyle(container).height) / HEIGHT + ', 1)';
+        canvas.style.transformOrigin = 'top left';
       };
     }
 
@@ -154,19 +158,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }, {
       key: 'clear',
       value: function clear() {
-        var config = this.last;
-        if (!config) return;
-        this.ctx.clearRect(config.x, config.y, config.width, config.height);
-      }
-      // 记录上次的属性信息 里边至少但不限于 x y width height
-
-    }, {
-      key: 'record',
-      value: function record() {
-        var last = this.last = {};
-        for (var key in this.config) {
-          last[key] = this.config[key];
-        }
+        this.ctx.clearRect(0, 0, WIDTH, HEIGHT);
       }
       // 初次渲染前的事件 会在beforeDraw前执行
 
@@ -180,8 +172,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       value: function beforeDraw() {
         // 先清除上次绘制的区域
         this.clear();
-        // 记录本次绘制区域
-        this.record();
       }
       // 绘制弹板 需要子类实现去
 
@@ -226,13 +216,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     function Board(ctx) {
       var config = arguments.length <= 1 || arguments[1] === undefined ? {
         width: 400,
-        height: 40
+        height: 20
       } : arguments[1];
 
       _classCallCheck(this, Board);
 
-      config.x = (width - config.width) / 2;
-      config.y = height - config.height;
+      config.x = (WIDTH - config.width) / 2;
+      config.y = HEIGHT - config.height;
       return _possibleConstructorReturn(this, Object.getPrototypeOf(Board).call(this, ctx, config));
     }
 
@@ -267,19 +257,69 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }, {
       key: 'initComplete',
       value: function initComplete() {
-        // let self = this;
-        // // 简单的测试下change方法好不好使
-        // setInterval(() => {
-        //   console.log(self.config.x);
-        //   self.change({
-        //     x: +self.config.x + 1
-        //   });
-        // }, 10)
+        console.log(this);
       }
     }]);
 
     return PlainBoard;
   }(Board);
+
+  // 小球的基类
+
+
+  var Ball = function (_ModuleBase2) {
+    _inherits(Ball, _ModuleBase2);
+
+    function Ball(ctx) {
+      var config = arguments.length <= 1 || arguments[1] === undefined ? {
+        width: 20
+      } : arguments[1];
+
+      _classCallCheck(this, Ball);
+
+      config.x = (WIDTH - config.width) / 2;
+      config.y = HEIGHT - config.width - 20;
+      return _possibleConstructorReturn(this, Object.getPrototypeOf(Ball).call(this, ctx, config));
+    }
+
+    return Ball;
+  }(ModuleBase);
+  // 普通小球
+
+
+  var PlainBall = function (_Ball) {
+    _inherits(PlainBall, _Ball);
+
+    function PlainBall() {
+      _classCallCheck(this, PlainBall);
+
+      return _possibleConstructorReturn(this, Object.getPrototypeOf(PlainBall).apply(this, arguments));
+    }
+
+    _createClass(PlainBall, [{
+      key: 'draw',
+      value: function draw() {
+        var ctx = this.ctx;
+        var config = this.config;
+        var rectangle = new Path2D();
+        rectangle.arc(config.x, config.y, config.width, 0, 2 * Math.PI);
+        ctx.fill(rectangle);
+      }
+    }, {
+      key: 'initComplete',
+      value: function initComplete() {
+        var self = this;
+        setInterval(function () {
+          self.change({
+            x: self.config.x - 5,
+            y: self.config.y - 5
+          });
+        }, 1);
+      }
+    }]);
+
+    return PlainBall;
+  }(Ball);
 
   return Krakout;
 }, window);

@@ -7,8 +7,8 @@
   let defaultConfig = {
     viewmode: 'fullscreen'
   };
-  let width = 4096; // px 默认的游戏宽度 目前写死 宽高全靠缩放
-  let height = 2160; // px
+  let WIDTH = 4096; // px 默认的游戏宽度 目前写死 宽高全靠缩放
+  let HEIGHT = 2160; // px
   class Krakout {
 
     // build game
@@ -16,9 +16,9 @@
       let self = this;
       let canvasList = self._canvas = {}; // 存放画布的集合 球 板 背景 各种...
       let screenWidth = self.screenWidth = parseFloat(getComputedStyle(container).width); // 容器的宽度
-      let ratioWidth = self.ratioWidth = (screenWidth / width); // 宽度缩放比例
+      let ratioWidth = self.ratioWidth = (screenWidth / WIDTH); // 宽度缩放比例
       let screenHeight = self.screenHeight = parseFloat(getComputedStyle(container).height); // 容器的高度
-      let ratioHeight = self.ratioHeight = (screenHeight / height); // 高度缩放比例
+      let ratioHeight = self.ratioHeight = (screenHeight / HEIGHT); // 高度缩放比例
 
       // 初始化游戏
       function init() {
@@ -31,7 +31,10 @@
           board.change({
             x: e.screenX / self.ratioWidth
           })
-        })
+        });
+
+        // 创建小球
+        var ball = new PlainBall(canvasList['ball']);
       }
 
       // 生成画布
@@ -48,7 +51,6 @@
           canvas.style.position = 'absolute';
           canvas.style.top = 0;
           canvas.style.left = 0;
-
           // 设置唯一标识
           canvas.id = canvas.className = `krakout-canvas-${tag}`;
 
@@ -67,10 +69,12 @@
       // 设置画布的宽高
       function buildScreen (container) {
         return canvas => {
-          canvas.width = width;
-          canvas.height = height;
-          canvas.style.width = global.getComputedStyle(container).width;
-          canvas.style.height = global.getComputedStyle(container).height;
+          canvas.width = WIDTH;
+          canvas.height = HEIGHT;
+          canvas.style.width = WIDTH;//global.getComputedStyle(container).width;
+          canvas.style.height = HEIGHT;//global.getComputedStyle(container).height;
+          canvas.style.transform = `scale3d(${parseFloat(global.getComputedStyle(container).width) / WIDTH}, ${parseFloat(global.getComputedStyle(container).height) / HEIGHT}, 1)`;
+          canvas.style.transformOrigin = 'top left';
         }
       }
 
@@ -126,16 +130,7 @@
     }
     // 清除上次绘制的区域
     clear () {
-      var config = this.last;
-      if (!config) return;
-      this.ctx.clearRect(config.x, config.y, config.width, config.height);
-    }
-    // 记录上次的属性信息 里边至少但不限于 x y width height
-    record () {
-      var last = this.last = {};
-      for (let key in this.config) {
-        last[key] = this.config[key];
-      }
+      this.ctx.clearRect(0, 0, WIDTH, HEIGHT);
     }
     // 初次渲染前的事件 会在beforeDraw前执行
     initReady () {}
@@ -143,8 +138,6 @@
     beforeDraw () {
       // 先清除上次绘制的区域
       this.clear();
-      // 记录本次绘制区域
-      this.record();
     }
     // 绘制弹板 需要子类实现去
     draw () {}
@@ -168,10 +161,10 @@
     // 弹板默认宽400px 高 40px 在4k屏下 其余为自动缩放
     constructor (ctx, config = {
         width: 400,
-        height: 40
+        height: 20
     }) {
-        config.x = (width - config.width) / 2;
-        config.y = height - config.height;
+        config.x = (WIDTH - config.width) / 2;
+        config.y = HEIGHT - config.height;
         super(ctx, config);
     }
   }
@@ -190,16 +183,40 @@
 
     }
     initComplete () {
-      // let self = this;
-      // // 简单的测试下change方法好不好使
-      // setInterval(() => {
-      //   console.log(self.config.x);
-      //   self.change({
-      //     x: +self.config.x + 1
-      //   });
-      // }, 10)
+      console.log(this);
     }
   }
+
+  // 小球的基类
+  class Ball extends ModuleBase {
+    constructor (ctx, config = {
+      width: 20
+    }) {
+      config.x = (WIDTH - config.width) / 2;
+      config.y = HEIGHT - config.width - 20;
+      super(ctx, config);
+    }
+  }
+  // 普通小球
+  class PlainBall extends Ball {
+    draw () {
+      var ctx = this.ctx;
+      var config = this.config;
+      var rectangle = new Path2D();
+      rectangle.arc(config.x, config.y, config.width, 0, 2 * Math.PI);
+      ctx.fill(rectangle);
+    }
+    initComplete () {
+      var self = this;
+      setInterval(() => {
+        self.change({
+          x: self.config.x - 5,
+          y: self.config.y - 5
+        });
+      }, 1);
+    }
+  }
+
 
   return Krakout;
 }, window);
