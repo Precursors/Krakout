@@ -220,7 +220,6 @@
     initComplete() { }
   }
 
-  const stride = 10;  // 就是小球 x ＋ y 的偏移量最大是这个数
 
   // 小球的基类
   class Ball extends ModuleBase {
@@ -230,20 +229,31 @@
     }) {
       config.x = (WIDTH - config.width) / 2;
       config.y = HEIGHT - config.width - 20;
+      config.stride = 30;  // 就是小球 x ＋ y 的偏移量最大是这个数
       super(ctx, config);
     }
 
     move() {
-      this.offsetX = Math.random() * 9 | 1;
-      this.offsetY = stride - this.offsetX;
+      this.offsetX = Math.random() * 14 | 1;
+      this.offsetY = this.config.stride - this.offsetX;
       this.proceed();
     }
 
     proceed() {
       var self = this;
-      self.moveFlag = setInterval(() => {
+      var move = () => {
         accessMove(self);
-      }, 1);
+        requestAnimationFrame(move);
+      }
+      // self.moveFlag = requestAnimationFrame(() => {
+      //   accessMove(self);
+      //
+      // }, 1);
+      self.moveFlag = requestAnimationFrame(move)
+    }
+
+    pause() {
+      clearInterval(this.moveFlag);
     }
   }
 
@@ -278,8 +288,8 @@
       self.offsetY = ~self.offsetY + 1;
     }
     self.change({
-      x: self.config.x - self.offsetX,
-      y: self.config.y - self.offsetY
+      x: x - self.offsetX,
+      y: y - self.offsetY
     });
   }
 

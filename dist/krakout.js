@@ -298,9 +298,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     return PlainBoard;
   }(Board);
 
-  var stride = 10; // 就是小球 x ＋ y 的偏移量最大是这个数
-
   // 小球的基类
+
 
   var Ball = function (_ModuleBase2) {
     _inherits(Ball, _ModuleBase2);
@@ -314,23 +313,35 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
       config.x = (WIDTH - config.width) / 2;
       config.y = HEIGHT - config.width - 20;
+      config.stride = 30; // 就是小球 x ＋ y 的偏移量最大是这个数
       return _possibleConstructorReturn(this, Object.getPrototypeOf(Ball).call(this, ctx, config));
     }
 
     _createClass(Ball, [{
       key: 'move',
       value: function move() {
-        this.offsetX = Math.random() * 9 | 1;
-        this.offsetY = stride - this.offsetX;
+        this.offsetX = Math.random() * 14 | 1;
+        this.offsetY = this.config.stride - this.offsetX;
         this.proceed();
       }
     }, {
       key: 'proceed',
       value: function proceed() {
         var self = this;
-        self.moveFlag = setInterval(function () {
+        var move = function move() {
           accessMove(self);
-        }, 1);
+          requestAnimationFrame(move);
+        };
+        // self.moveFlag = requestAnimationFrame(() => {
+        //   accessMove(self);
+        //
+        // }, 1);
+        self.moveFlag = requestAnimationFrame(move);
+      }
+    }, {
+      key: 'pause',
+      value: function pause() {
+        clearInterval(this.moveFlag);
       }
     }]);
 
@@ -387,8 +398,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       self.offsetY = ~self.offsetY + 1;
     }
     self.change({
-      x: self.config.x - self.offsetX,
-      y: self.config.y - self.offsetY
+      x: x - self.offsetX,
+      y: y - self.offsetY
     });
   }
 
