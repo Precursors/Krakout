@@ -10,11 +10,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 ;
 (function (factory, global) {
+
   global.Krakout = global.Krakout || factory(global);
 })(function (global) {
-  var defaultConfig = {
-    viewmode: 'fullscreen'
-  };
+
+  var defaultConfig = {};
   var WIDTH = 4096; // px 默认的游戏宽度 目前写死 宽高全靠缩放
   var HEIGHT = 2160; // px
 
@@ -33,14 +33,18 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     var screenHeight = self.screenHeight = parseFloat(getComputedStyle(container).height); // 容器的高度
     var ratioHeight = self.ratioHeight = screenHeight / HEIGHT; // 高度缩放比例
 
-    // 初始化游戏
+    /**
+     * 初始化游戏
+     */
     function init() {
+
       // 创建基础的画布
       buildCanvas(['ball', 'board', 'layout'], buildScreen(container));
       // 创建弹板
       var board = new PlainBoard(canvasList['board']);
 
       container.addEventListener('mousemove', function (e) {
+
         board.change({
           x: e.screenX / self.ratioWidth
         });
@@ -48,10 +52,19 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
       // 创建小球
       var ball = new PlainBall(canvasList['ball']);
+
+      var balls = self.balls = [];
+
+      balls.push(ball);
     }
 
-    // 生成画布
+    /**
+     * 生成画布
+     * @param  {string | object}   tag  一个标识符
+     * @param  {Function} callback 完成创建后的一个函数调用 并且会将生成后的canvas当成参数传入进去
+     */
     function buildCanvas(tag, callback) {
+
       if (typeof tag !== 'string') {
         for (var key in tag) {
           buildCanvas(tag[key], callback);
@@ -78,14 +91,20 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       }
     }
 
-    // 设置画布的宽高
+    /**
+     * 生成一个设置画布的尺寸的函数
+     * @param  {Element} container 实力化游戏传入的容器dom对象 主要用于获取它的宽高值
+     * @return {Function}          返回的函数用于设置
+     */
     function buildScreen(container) {
+      var wrapWidth = parseFloat(global.getComputedStyle(container).width);
+      var wrapHeight = parseFloat(global.getComputedStyle(container).height);
       return function (canvas) {
         canvas.width = WIDTH;
         canvas.height = HEIGHT;
         canvas.style.width = WIDTH; //global.getComputedStyle(container).width;
         canvas.style.height = HEIGHT; //global.getComputedStyle(container).height;
-        canvas.style.transform = 'scale3d(' + parseFloat(global.getComputedStyle(container).width) / WIDTH + ', ' + parseFloat(global.getComputedStyle(container).height) / HEIGHT + ', 1)';
+        canvas.style.transform = 'scale3d(' + wrapWidth / WIDTH + ', ' + wrapHeight / HEIGHT + ', 1)';
         canvas.style.transformOrigin = 'top left';
       };
     }
@@ -98,6 +117,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 
   var ModuleBase = function () {
+
+    /**
+     * 一切游戏中出现的canvas都继承于这个class
+     * @param  {object} ctx    canvas的context属性
+     * @param  {object} config 可选的配置参数
+     */
+
     function ModuleBase(ctx) {
       var config = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
@@ -110,6 +136,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       self.config = config;
       config.x = config.x || 0;
       config.y = config.y || 0;
+
       // 注册需要重绘的属性集合
       self.regChange(['x', 'y', 'width', 'height']);
       // 初始化前做的操作
@@ -138,6 +165,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           }
         }
       }
+
       // 更改config的属性
 
     }, {
@@ -153,6 +181,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }
         flag && this.reDraw();
       }
+
       // 清除上次绘制的区域
 
     }, {
@@ -160,16 +189,19 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       value: function clear() {
         this.ctx.clearRect(0, 0, WIDTH, HEIGHT);
       }
+
       // 初次渲染前的事件 会在beforeDraw前执行
 
     }, {
       key: 'initReady',
       value: function initReady() {}
+
       // 在绘制之前 先清除上次绘制 并记录当前信息
 
     }, {
       key: 'beforeDraw',
       value: function beforeDraw() {
+
         // 先清除上次绘制的区域
         this.clear();
       }
@@ -178,21 +210,25 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }, {
       key: 'draw',
       value: function draw() {}
+
       // 绘制后调用
 
     }, {
       key: 'afterDraw',
       value: function afterDraw() {}
+
       // 初次渲染后的事件
 
     }, {
       key: 'initComplete',
       value: function initComplete() {}
+
       // 重新绘制
 
     }, {
       key: 'reDraw',
       value: function reDraw() {
+
         // 绘制前
         this.beforeDraw();
         // 绘制
@@ -256,16 +292,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       }
     }, {
       key: 'initComplete',
-      value: function initComplete() {
-        console.log(this);
-      }
+      value: function initComplete() {}
     }]);
 
     return PlainBoard;
   }(Board);
 
-  // 小球的基类
+  var stride = 10; // 就是小球 x ＋ y 的偏移量最大是这个数
 
+  // 小球的基类
 
   var Ball = function (_ModuleBase2) {
     _inherits(Ball, _ModuleBase2);
@@ -282,8 +317,26 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       return _possibleConstructorReturn(this, Object.getPrototypeOf(Ball).call(this, ctx, config));
     }
 
+    _createClass(Ball, [{
+      key: 'move',
+      value: function move() {
+        this.offsetX = Math.random() * 9 | 1;
+        this.offsetY = stride - this.offsetX;
+        this.proceed();
+      }
+    }, {
+      key: 'proceed',
+      value: function proceed() {
+        var self = this;
+        self.moveFlag = setInterval(function () {
+          accessMove(self);
+        }, 1);
+      }
+    }]);
+
     return Ball;
   }(ModuleBase);
+
   // 普通小球
 
 
@@ -308,18 +361,36 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }, {
       key: 'initComplete',
       value: function initComplete() {
-        var self = this;
-        setInterval(function () {
-          self.change({
-            x: self.config.x - 5,
-            y: self.config.y - 5
-          });
-        }, 1);
+        this.move();
       }
     }]);
 
     return PlainBall;
   }(Ball);
+
+  /**
+   * 移动小球的方法
+   * @param  {object} 当前某个小球模型的对象上下文
+   */
+
+
+  function accessMove(self) {
+    var x = self.config.x;
+    var y = self.config.y;
+    var position = {};
+
+    // 默认是往左上移动（我乐意）
+    if (x <= 0 || x >= WIDTH) {
+      self.offsetX = ~self.offsetX + 1;
+    }
+    if (y <= 0 || y >= HEIGHT) {
+      self.offsetY = ~self.offsetY + 1;
+    }
+    self.change({
+      x: self.config.x - self.offsetX,
+      y: self.config.y - self.offsetY
+    });
+  }
 
   return Krakout;
 }, window);
