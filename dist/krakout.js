@@ -380,10 +380,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     var position = {};
 
     // 默认是往左上移动（我乐意）
-    if (x <= 0 || x >= WIDTH) {
+    if (x <= 0 || x + self.config.width >= WIDTH) {
       self.offsetX = ~self.offsetX + 1;
     }
-    if (y <= 0 || y >= HEIGHT) {
+    if (y <= 0 || y + self.config.width >= HEIGHT) {
       self.offsetY = ~self.offsetY + 1;
     }
     self.change({
