@@ -1,5 +1,5 @@
 // 普通小球
-class PlainBall extends Ball {
+var PlainBall = class extends Ball {
 
   draw() {
 
