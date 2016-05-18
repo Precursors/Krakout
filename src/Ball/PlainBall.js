@@ -1,5 +1,5 @@
 // 普通小球
-var PlainBall = class extends Ball {
+ Krakout.module.PlainBall = class extends Krakout.module.Ball {
 
   draw() {
 

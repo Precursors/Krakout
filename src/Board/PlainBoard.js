@@ -1,5 +1,5 @@
 // 普通弹板
-class PlainBoard extends Board {
+ Krakout.module.PlainBoard = class extends Krakout.module.Board {
   // 子类实现的绘制方法
   draw() {
     var ctx = this.ctx;
@@ -9,7 +9,6 @@ class PlainBoard extends Board {
     var rectangle = new Path2D();
     rectangle.rect(config.x, config.y, config.width, config.height);
     ctx.fill(rectangle);
-
   }
 
   initComplete() { }

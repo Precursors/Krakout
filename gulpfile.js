@@ -7,7 +7,7 @@ let concat = require('gulp-concat');
 
 const jsPath = [
   'src/libs/*.js',
-  'src/krakout.js',
+  'src/Krakout.js',
   'src/Base/ModuleBase.js',
   'src/Base/Board.js',
   'src/Base/Ball.js',
@@ -18,7 +18,8 @@ const jsPath = [
 gulp.task('watch', () => gulp.watch(jsPath, ['build']));
 
 gulp.task('build', () =>
-  gulp.src(jsPath).pipe(babel({
+  gulp.src(jsPath)
+  .pipe(babel({
 		presets: ['es2015']
 	}))
   .pipe(concat('all.js'))
